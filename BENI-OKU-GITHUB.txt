@@ -1,0 +1,39 @@
+TurqTrack - Windows (.exe) ve Android (.apk) uretimi (GitHub, ucretsiz)
+
+Bu klasoru GitHub'a yuklersen GitHub senin yerine TurqTrack'in Windows kurulum dosyasini (.exe)
+ve Android uygulamasini (.apk) uretir. Bilgisayarina hicbir sey kurmazsin.
+
+ADIMLAR
+1. github.com'da ucretsiz hesap ac.
+2. Sag ustte "+" > "New repository". Adi: turqtrack. "Private" sec (sadece sen gorursun). "Create repository".
+3. Acilan sayfada "uploading an existing file" baglantisina tikla.
+4. Zip'ten cikardigin klasorun ICINDEKI her seyi sayfaya surukle birak
+   (www, electron, build, scripts, .github klasorleri, package.json, capacitor.config.json).
+   Mac'te gizli klasorleri gormek icin Finder'da Cmd+Shift+. tusuna bas.
+   ".github" klasoru yuklenmezse: "Add file" > "Create new file", dosya adina
+   .github/workflows/build.yml yaz ve build-yml-kopya.txt icindekini yapistir.
+5. En alttaki "Commit changes" dugmesine bas.
+6. Ust menuden "Actions" sekmesine gir. "Build apps" calismaya baslar (yaklasik 10-20 dakika).
+7. Yesil tik cikinca ayni repo ana sayfasinda sagdaki "Releases" bolumune tikla.
+   Orada iki dosya var:
+   - TurqTrack Setup ....exe  (Windows kurulum) ve portable .exe
+   - TurqTrack-Android.apk  (Android)
+   Acilmazsa Actions > son calisma > en alttaki "Artifacts" bolumunden de indirebilirsin.
+
+KURULUM
+- Windows: .exe'ye cift tikla. "Windows bilgisayarini korudu" uyarisi cikarsa
+  "Ek bilgi" > "Yine de calistir" de (uygulama imzali degil, bu normal).
+- Android: .apk'yi telefona indir, ac. "Bilinmeyen kaynaklardan yukleme" iznini ver.
+  Play Protect uyarirsa "Yine de yukle" de. Ilk acilista bildirim izni ister, "Izin ver" de.
+
+HATA OLURSA
+Actions sekmesinde kirmizi carpi cikarsa ilgili adima tikla, hata satirlarini kopyalayip bana gonder.
+
+NOTLAR
+- Veriler her cihazda o cihazda saklanir. Cihazlar arasi otomatik esitleme icin web paketindeki
+  supabase-kurulum.sql ve OKU-BENI.txt adimlarini uygula, sonra her cihazda uygulamanin
+  "Bulut esitleme" bolumune ayni bilgileri gir.
+- Android uygulamasi sureleri telefonun kendisine kaydeder, uygulama kapaliyken de bildirim gelir
+  (15 gun, 7 gun, 1 gun kala ve son gun sabah 09:00).
+- Windows'ta bildirim sadece uygulama aciksa gelir.
+- Dosya indirme/acma Android'de "Paylas" penceresi uzerinden calisir.

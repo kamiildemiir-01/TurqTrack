@@ -1,0 +1,6 @@
+{
+  "appId": "com.kamildemir.turqtrack",
+  "appName": "TurqTrack",
+  "webDir": "www",
+  "server": { "androidScheme": "https" }
+}
