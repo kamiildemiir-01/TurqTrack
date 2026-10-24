@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TurqTrack</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0a0e27">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="TurqTrack">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<style>html,body{margin:0;background:#0b1020}</style>
+</head>
+<body>
+<script>
+(function(){
+ var BUILT=4,o=null;
+ try{o=JSON.parse(localStorage.getItem("tq-ota")||"null")}catch(e){}
+ window.TQ_BUILT=BUILT;window.TQ_VER=BUILT;
+ function nat(){var s=document.createElement("script");s.src="native.js";document.body.appendChild(s)}
+ if(o&&o.v>BUILT&&o.code){
+  window.TQ_VER=o.v;
+  var s=document.createElement("script");s.textContent=o.code;document.body.appendChild(s);nat();
+  setTimeout(function(){if(!window.__tqOk){try{localStorage.removeItem("tq-ota")}catch(e){}location.reload()}},6000);
+ }else{
+  var s2=document.createElement("script");s2.src="app.js?v="+BUILT;s2.onload=nat;document.body.appendChild(s2);
+ }
+})();
+</script>
+</body>
+</html>
