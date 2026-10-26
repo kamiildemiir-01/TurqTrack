@@ -18,10 +18,18 @@ jobs:
           node-version: 20
       - run: npm install
       - run: npx electron-builder --win --publish never
+      - name: Cikti dosyalarini listele ve zip yap
+        shell: pwsh
+        run: |
+          Get-ChildItem dist
+          Compress-Archive -Path "dist/*.exe" -DestinationPath TurqTrack-Windows.zip
       - uses: actions/upload-artifact@v4
         with:
           name: TurqTrack-Windows
-          path: dist/*.exe
+          path: |
+            TurqTrack-Windows.zip
+            dist/*.exe
+          if-no-files-found: error
 
   android:
     runs-on: ubuntu-latest
@@ -47,6 +55,7 @@ jobs:
         with:
           name: TurqTrack-Android
           path: TurqTrack-Android.apk
+          if-no-files-found: error
 
   release:
     needs: [windows, android]
