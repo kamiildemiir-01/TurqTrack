@@ -16,16 +16,27 @@
 <body>
 <script>
 (function(){
- var BUILT=5,o=null;
+ var BUILT=6,o=null,lastErr="";
  try{o=JSON.parse(localStorage.getItem("tq-ota")||"null")}catch(e){}
  window.TQ_BUILT=BUILT;window.TQ_VER=BUILT;
- function nat(){var s=document.createElement("script");s.src="native.js";document.body.appendChild(s)}
+ window.addEventListener("error",function(e){if(!window.__tqOk)lastErr=(e.message||"hata")+(e.lineno?" (satır "+e.lineno+")":"")});
+ function banner(t){var d=document.createElement("div");d.style.cssText="position:fixed;left:8px;right:8px;top:8px;z-index:99;background:#b3261e;color:#fff;padding:10px 14px;border-radius:10px;font:14px system-ui,sans-serif";d.textContent=t+" (kapatmak için dokunun)";d.onclick=function(){d.remove()};document.body.appendChild(d)}
+ function nat(){
+  var s=document.createElement("script");s.src="native.js";document.body.appendChild(s);
+  try{var f=localStorage.getItem("tq-ota-fail");if(f){localStorage.removeItem("tq-ota-fail");banner(f)}}catch(e){}
+ }
  if(o&&o.v>BUILT&&o.code){
   window.TQ_VER=o.v;
   var s=document.createElement("script");s.textContent=o.code;document.body.appendChild(s);nat();
-  setTimeout(function(){if(!window.__tqOk){try{localStorage.removeItem("tq-ota")}catch(e){}location.reload()}},6000);
+  setTimeout(function(){
+   if(!window.__tqOk){
+    try{localStorage.removeItem("tq-ota");localStorage.setItem("tq-ota-fail","Güncelleme (sürüm "+o.v+") başlatılamadı: "+(lastErr||"bilinmeyen hata")+". Yerleşik sürümle devam ediliyor.")}catch(e){}
+    location.reload();
+   }
+  },6000);
  }else{
   var s2=document.createElement("script");s2.src="app.js?v="+BUILT;s2.onload=nat;document.body.appendChild(s2);
+  setTimeout(function(){if(!window.__tqOk)banner("Uygulama başlatılamadı: "+(lastErr||"bilinmeyen hata"))},5000);
  }
 })();
 </script>
