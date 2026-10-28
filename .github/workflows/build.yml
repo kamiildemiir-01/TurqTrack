@@ -3,6 +3,9 @@ name: Build apps
 on:
   push:
     branches: [main, master]
+    paths-ignore:
+      - "www/app.js"
+      - "www/version.json"
   workflow_dispatch:
 
 permissions:
