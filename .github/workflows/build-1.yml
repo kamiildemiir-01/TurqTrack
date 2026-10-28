@@ -1,0 +1,74 @@
+name: Build apps
+
+on:
+  push:
+    branches: [main, master]
+    paths-ignore:
+      - "www/app.js"
+      - "www/version.json"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+      - run: npx electron-builder --win --publish never
+      - name: Cikti dosyalarini listele ve zip yap
+        shell: pwsh
+        run: |
+          Get-ChildItem dist
+          Compress-Archive -Path "dist/*.exe" -DestinationPath TurqTrack-Windows.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TurqTrack-Windows
+          path: |
+            TurqTrack-Windows.zip
+            dist/*.exe
+          if-no-files-found: error
+
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - run: npm install
+      - run: npx cap add android
+      - run: bash scripts/android-setup.sh
+      - run: npx cap sync android
+      - run: |
+          chmod +x android/gradlew
+          cd android
+          ./gradlew assembleDebug
+      - run: cp android/app/build/outputs/apk/debug/app-debug.apk TurqTrack-Android.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TurqTrack-Android
+          path: TurqTrack-Android.apk
+          if-no-files-found: error
+
+  release:
+    needs: [windows, android]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: TurqTrack build ${{ github.run_number }}
+          files: out/**/*
