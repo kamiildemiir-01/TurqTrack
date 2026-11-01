@@ -50,7 +50,7 @@
   window.openDoc = async function (id) {
     try {
       var v = await getDoc(id);
-      if (!v) { alert("Dosya bulunamadı. İnternet yoksa ve dosya bu cihaza henüz inmediyse açılamaz."); return; }
+      if (!v) { alert(window.DOCMSG||"Dosya bulunamadı. İnternet yoksa ve dosya bu cihaza henüz inmediyse açılamaz."); return; }
       var nm = safe(docName(id) || id);
       var r = await FS.writeFile({ path: nm, data: await blobB64(v.blob), directory: "CACHE" });
       await SH.share({ title: nm, url: r.uri, dialogTitle: nm });

@@ -16,7 +16,7 @@
 <body>
 <script>
 (function(){
- var BUILT=6,o=null,lastErr="";
+ var BUILT=10,o=null,lastErr="";
  try{o=JSON.parse(localStorage.getItem("tq-ota")||"null")}catch(e){}
  window.TQ_BUILT=BUILT;window.TQ_VER=BUILT;
  window.addEventListener("error",function(e){if(!window.__tqOk)lastErr=(e.message||"hata")+(e.lineno?" (satır "+e.lineno+")":"")});
