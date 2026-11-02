@@ -10,3 +10,6 @@ for d in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
 done
 M=android/app/src/main/AndroidManifest.xml
 grep -q POST_NOTIFICATIONS "$M" || sed -i 's#</manifest>#    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\n</manifest>#' "$M"
+for P in SCHEDULE_EXACT_ALARM USE_EXACT_ALARM RECEIVE_BOOT_COMPLETED VIBRATE WAKE_LOCK; do
+  grep -q "android.permission.$P\"" "$M" || sed -i "s#</manifest>#    <uses-permission android:name=\"android.permission.$P\" />\n</manifest>#" "$M"
+done
