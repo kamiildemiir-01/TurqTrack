@@ -60,53 +60,94 @@
     }
   };
 
-  /* Her güne ait 10:00 geri sayım bildirimleri: süresi 15 gün ve altına inen her dosya için */
-  var tmr = null;
+  /* Süre bildirimleri: her gün 10:00'da, aynı gün ve aynı türdeki dosyalar tek bildirimde gruplanır */
+  var tmr = null, CH = "sureler";
+  async function ensureChannel() {
+    try { await LN.createChannel({ id: CH, name: "Süre uyarıları", description: "Başvuru ve eksiklik süre hatırlatmaları", importance: 5, visibility: 1, vibration: true }); } catch (e) {}
+  }
+  async function ensurePerm() {
+    var perm = await LN.checkPermissions();
+    if (perm.display !== "granted") perm = await LN.requestPermissions();
+    return perm.display === "granted";
+  }
+  function listTxt(a) {
+    var u = a.filter(function (x, i) { return a.indexOf(x) === i; });
+    return u.length > 4 ? u.slice(0, 4).join(", ") + " ve " + (u.length - 4) + " dosya" : u.join(", ");
+  }
+  function lineTxt(kind, bks, d) {
+    var pre = listTxt(bks) + " barkodlu " + (bks.length > 1 ? "dosyaların " : "dosyanın ") + kind + " süresi";
+    return d > 0 ? pre + "nin dolmasına " + d + " gün kaldı."
+      : d === 0 ? pre + " bugün doluyor."
+      : pre + " " + (-d) + " gün önce doldu.";
+  }
   var sched = async function () {
     try {
-      var perm = await LN.checkPermissions();
-      if (perm.display !== "granted") {
-        perm = await LN.requestPermissions();
-        if (perm.display !== "granted") return false;
-      }
+      if (!(await ensurePerm())) return false;
+      await ensureChannel();
       var pend = await LN.getPending();
-      if (pend.notifications.length) {
-        await LN.cancel({ notifications: pend.notifications.map(function (n) { return { id: n.id }; }) });
-      }
-      var list = [], now = Date.now();
+      var old = pend.notifications.filter(function (n) { return n.id !== 999001; });
+      if (old.length) await LN.cancel({ notifications: old.map(function (n) { return { id: n.id }; }) });
+      var now = Date.now(), days = {};
       db.rows.forEach(function (r) {
         calc(r);
-        var bk = r.barkod || "Barkodsuz", pj = r.proje || r.dt || "dosya";
+        var bk = r.barkod || "Barkodsuz";
         [["sba", sbaAktif(r) && r.sba, "başvuru"], ["ebs", ekAktif(r) && r.ebs, "eksiklik tamamlama"]].forEach(function (k) {
           if (!k[1]) return;
           for (var d = 15; d >= -3; d--) {
             var t = new Date(k[1] + "T10:00:00");
             t.setDate(t.getDate() - d);
             if (t.getTime() <= now) continue;
-            var pre = bk + " numaralı " + pj + " dosyasının " + k[2] + " süresi";
-            var body = d > 0 ? pre + "nin dolmasına " + d + " gün kaldı."
-              : d === 0 ? pre + " bugün doluyor."
-              : pre + " " + (-d) + " gün önce doldu.";
-            list.push({
-              id: Math.abs(hsh(String(r.id) + k[0] + d)) % 2147000000 + 1,
-              title: "TurqTrack: Süre uyarısı",
-              body: body,
-              schedule: { at: t, allowWhileIdle: true }
-            });
+            var key = t.getTime() + "|" + k[0];
+            var g = days[key] || (days[key] = { t: t, kind: k[2], by: {} });
+            (g.by[d] = g.by[d] || []).push(bk);
           }
+        });
+      });
+      var list = [];
+      Object.keys(days).forEach(function (key) {
+        var g = days[key], ds = Object.keys(g.by).map(Number).sort(function (x, y) { return x - y; });
+        var total = 0; ds.forEach(function (d) { total += g.by[d].length; });
+        var first = ds[0], body = lineTxt(g.kind, g.by[first], first);
+        if (total > g.by[first].length) body += " (+" + (total - g.by[first].length) + " dosya daha)";
+        var big = ds.map(function (d) { return lineTxt(g.kind, g.by[d], d); }).join("\n");
+        list.push({
+          id: Math.abs(hsh(key)) % 2147000000 + 1,
+          title: g.kind === "başvuru" ? "TurqTrack: Başvuru süresi" : "TurqTrack: Eksiklik süresi",
+          body: body, largeBody: big, summaryText: total + " dosya",
+          channelId: CH,
+          schedule: { at: g.t, allowWhileIdle: true }
         });
       });
       list.sort(function (a, b) { return a.schedule.at - b.schedule.at; });
       list = list.slice(0, 450);
       if (list.length) await LN.schedule({ notifications: list });
       return true;
-    } catch (e) { return false; }
+    } catch (e) { window.__tqNotifErr = String((e && e.message) || e); return false; }
   };
+
+  window.tqNotifInfo = async function () {
+    var perm = await LN.checkPermissions(), ex = "bilinmiyor";
+    try { ex = (await LN.checkExactNotificationSetting()).exact_alarm; } catch (e) {}
+    var pend = await LN.getPending();
+    return { perm: perm.display, exact: ex, pending: pend.notifications.filter(function (n) { return n.id !== 999001; }).length, err: window.__tqNotifErr || "" };
+  };
+  window.tqNotifTest = async function () {
+    if (!(await ensurePerm())) return false;
+    await ensureChannel();
+    await LN.schedule({ notifications: [{
+      id: 999001, title: "TurqTrack: deneme bildirimi",
+      body: "210426/456 barkodlu dosyanın eksiklik tamamlama süresinin dolmasına 10 gün kaldı. (Deneme)",
+      channelId: CH, schedule: { at: new Date(Date.now() + 10000), allowWhileIdle: true }
+    }] });
+    return true;
+  };
+  window.tqNotifExact = async function () { try { await LN.changeExactNotificationSetting(); } catch (e) {} };
 
   window.bildirimIzni = async function () {
     var ok = await sched();
-    alert(ok ? "Bildirimler ayarlandı. Süresi 15 gün ve altına inen her dosya için her sabah 10:00'da geri sayım bildirimi gelir, uygulama kapalıyken de çalışır."
+    alert(ok ? "Bildirimler ayarlandı. Süresi yaklaşan dosyalar için her sabah 10:00'da bildirim gelir, uygulama kapalıyken de çalışır. Emin olmak için \"Bildirimi Sına\" düğmesini kullanın."
              : "Bildirim izni verilmedi. Telefon ayarlarından TurqTrack için bildirimleri açın.");
+    if (window.bildRefresh) window.bildRefresh();
   };
 
   var _render = window.render;
