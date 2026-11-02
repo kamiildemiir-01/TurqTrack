@@ -114,7 +114,7 @@
           id: Math.abs(hsh(key)) % 2147000000 + 1,
           title: g.kind === "başvuru" ? "TurqTrack: Başvuru süresi" : "TurqTrack: Eksiklik süresi",
           body: body, largeBody: big, summaryText: total + " dosya",
-          channelId: CH, smallIcon: "ic_stat_turqtrack", largeIcon: "tq_large", iconColor: "#4f7cff",
+          channelId: CH, smallIcon: "ic_stat_turqtrack", iconColor: "#4f7cff",
           schedule: { at: g.t, allowWhileIdle: true }
         });
       });
@@ -137,7 +137,8 @@
     await LN.schedule({ notifications: [{
       id: 999001, title: "TurqTrack: deneme bildirimi",
       body: "210426/456 barkodlu dosyanın eksiklik tamamlama süresinin dolmasına 10 gün kaldı. (Deneme)",
-      channelId: CH, smallIcon: "ic_stat_turqtrack", largeIcon: "tq_large", iconColor: "#4f7cff", schedule: { at: new Date(Date.now() + 10000), allowWhileIdle: true }
+      largeBody: "210426/456 barkodlu dosyanın eksiklik tamamlama süresinin dolmasına 10 gün kaldı.\n210426/457 barkodlu dosyanın başvuru süresinin dolmasına 5 gün kaldı.\n(Bu bir deneme bildirimidir.)", summaryText: "2 dosya",
+      channelId: CH, smallIcon: "ic_stat_turqtrack", iconColor: "#4f7cff", schedule: { at: new Date(Date.now() + 10000), allowWhileIdle: true }
     }] });
     return true;
   };
